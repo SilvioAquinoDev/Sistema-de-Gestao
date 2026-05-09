@@ -8,6 +8,8 @@ from collections import defaultdict
 from cachetools import TTLCache
 import logging
 import hashlib
+from sqlalchemy import text
+from .auth import verify_credentials
 
 from .database import get_db
 from .models import (
@@ -58,6 +60,13 @@ except Exception as e:
     logger.error(f"❌ Erro ao inicializar: {e}")
     infosimples = None
 
+@router.post("/processar-nfce", dependencies=[Depends(verify_credentials)])
+async def processar_nfce(...):
+    ...
+
+@router.post("/livro-diario", dependencies=[Depends(verify_credentials)])
+async def criar_lancamento_livro_diario(...):
+    ...
 
 # ============= ENDPOINTS NFC-e =============
 
@@ -249,7 +258,8 @@ async def listar_livro_diario(
     if data_fim:
         query = query.filter(LivroDiario.data <= data_fim)
     if conta:
-        query = query.filter(LivroDiario.conta.ilike(f"%{conta}%"))
+        safe_term = conta.replace('%', '%%').replace('_', '__')
+        query = query.filter(LivroDiario.conta.ilike(f"%{safe_term}%"))
     if tipo:
         query = query.filter(LivroDiario.tipo == tipo)
     
